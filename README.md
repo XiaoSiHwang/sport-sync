@@ -1,1 +1,1 @@
-Docs: 📖 [Sport Sync Docs](https://help.jianguoyun.com/?p=2064)
+Docs: 📖 [Sport Sync Docs](https://blog.999973.xyz/1430702270/)
