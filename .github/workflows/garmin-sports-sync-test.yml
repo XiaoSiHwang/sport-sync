@@ -6,8 +6,8 @@ on:
     branches: [ dev ]
 
 env:
-  GITHUB_NAME: XiaoSiHwang
-  GITHUB_EMAIL: 1009326507@qq.com
+  # GITHUB_NAME: XiaoSiHwang
+  # GITHUB_EMAIL: 1009326507@qq.com
   AESKEY: ${{ secrets.AESKEY }}
   SOURCE_GARMIN_AUTH_DOMAIN: ${{ secrets.SOURCE_GARMIN_AUTH_DOMAIN }}
   SOURCE_GARMIN_EMAIL: ${{ secrets.SOURCE_GARMIN_EMAIL }}
@@ -54,14 +54,14 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+        pip install -r requirements.txt
+      if: steps.pip-cache.outputs.cache-hit != 'true'
     - name: Run Garmin Sync
       run: |
         python scripts/garmin/garmin_sync.py
     - name: Push new cookie
       run: |
-        git config --local user.email "${{ env.GITHUB_EMAIL }}"
-        git config --local user.name "${{ env.GITHUB_NAME }}"
+        
         git add .
         git commit -m 'update garmin cookie' || echo "nothing to commit"
         git push || echo "nothing to push"
