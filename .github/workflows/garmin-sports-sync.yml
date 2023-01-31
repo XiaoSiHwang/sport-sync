@@ -15,7 +15,16 @@ env:
   WEBDAV_URL:  ${{ secrets.WEBDAV_URL }}
   WEBDAV_USERNAME:  ${{ secrets.WEBDAV_USERNAME }}
   WEBDAV_PASSWORD:  ${{ secrets.WEBDAV_PASSWORD }}
+  
+  ## 通知推送配置
+  # 企业微信机器人
   QYWX_KEY:  ${{ secrets.QYWX_KEY }}
+  
+  # 叮叮机器人
+  DD_BOT_SECRET:  ${{ secrets.DD_BOT_SECRET }}
+  DD_BOT_TOKEN:  ${{ secrets.DD_BOT_TOKEN }}
+
+  
 jobs:
   build:
 
