@@ -17,6 +17,7 @@ env:
   WEBDAV_URL:  ${{ secrets.WEBDAV_URL }}
   WEBDAV_USERNAME:  ${{ secrets.WEBDAV_USERNAME }}
   WEBDAV_PASSWORD:  ${{ secrets.WEBDAV_PASSWORD }}
+  LOCAL_OR_WEBDAV: ${{ secrets.LOCAL_OR_WEBDAV }}
   
   ## 通知推送配置
   # 企业微信机器人
