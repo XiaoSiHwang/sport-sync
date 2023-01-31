@@ -12,7 +12,7 @@ sys.path.append(config_path)
 from sqlite_db_webdav import SqliteWebDAVDB as SqliteDB
 from aestools import AESCipher
 
-from config import DB_WEBDAV_DIR
+from config import DB_DIR, LOCAL_OR_WEBDAV
 
 from jianguoyun_client import JianGuoYunClient
 
@@ -27,8 +27,10 @@ class GarminDB:
         
         self.garmin_cookie = garmin_cookie
         self.aesChiper = AESCipher(aes_key)
-        self.jianguoyun_client = JianGuoYunClient()
-        self.jianguoyun_client.init_db_file(garmin_db_path)
+        if LOCAL_OR_WEBDAV:
+            print("AAA")
+            self.jianguoyun_client = JianGuoYunClient()
+            self.jianguoyun_client.init_db_file(garmin_db_path)
 
         
  
@@ -61,7 +63,7 @@ class GarminDB:
                 WHERE id = ?
             '''
 
-        with SqliteDB(os.path.join(DB_WEBDAV_DIR, self.garmin_db_path)) as db:
+        with SqliteDB(os.path.join(DB_DIR, self.garmin_db_path)) as db:
             ## 根据email 和 区域后缀查询查询是否存储了用户
             exists_query_set = db.execute(exists_select_sql, (encrypt_main_email, encrypt_main_auth_domain, encrypt_sync_email, encrypt_sync_auth_domain)).fetchall()
 
@@ -93,7 +95,7 @@ class GarminDB:
         else:
             cookie_select_sql = 'SELECT sync_cookie FROM garmin_cookie WHERE id = ?'
 
-        with SqliteDB(os.path.join(DB_WEBDAV_DIR, self.garmin_db_path)) as db:
+        with SqliteDB(os.path.join(DB_DIR, self.garmin_db_path)) as db:
             exists_query_set = db.execute(exists_select_sql, (encrypt_main_email, encrypt_main_auth_domain, encrypt_sync_email, encrypt_sync_auth_domain)).fetchall()
 
             query_size = len(exists_query_set)
@@ -130,7 +132,7 @@ class GarminDB:
 
 ## 初始化建表
 def initGarminDB(garmin_db_path):
-    with SqliteDB(os.path.join(DB_WEBDAV_DIR, garmin_db_path)) as db:
+    with SqliteDB(os.path.join(DB_DIR, garmin_db_path)) as db:
         db.execute('''
         CREATE TABLE garmin_cookie (
             id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,

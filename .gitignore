@@ -22,8 +22,9 @@ _site/
 /.vscode
 .idea
 
+.Python
+
 config.yaml
 
-/webdav-db
-/webdav-fit
-/db
+
+/FIT_OUT

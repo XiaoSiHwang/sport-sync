@@ -13,7 +13,7 @@ CURRENT_DIR = os.path.split(os.path.abspath(__file__))[0]  # 当前目录
 config_path = CURRENT_DIR.rsplit('/', 1)[0]  # 上三级目录
 sys.path.append(config_path)
 
-from config import DB_WEBDAV_DIR, FIT_WEBDAV_DIR, JIAN_GOU_YUN_WEBDAV_PATH, JIAN_GOU_YUN_WEBDAV_DB_DIR, JIAN_GOU_YUN_WEBDAV_FIT_FOLDER
+from config import JIAN_GOU_YUN_WEBDAV_PATH, JIAN_GOU_YUN_WEBDAV_DB_DIR, JIAN_GOU_YUN_WEBDAV_FIT_FOLDER,FIT_DIR, DB_DIR
 from garmin_connect import GarminConnect
 from garmin_db import GarminDB, initGarminDB
 from garmin_cookie import GarminCookie
@@ -26,7 +26,8 @@ SYNC_CONFIG = {
     'SOURCE_GARMIN_PASSWORD': '',
     'SYNC_GARMIN_AUTH_DOMAIN': '',
     'SYNC_GARMIN_EMAIL': '',
-    'SYNC_GARMIN_PASSWORD': ''
+    'SYNC_GARMIN_PASSWORD': '',
+    'LOCAL_OR_WEBDAV' : False
 }
 
 
@@ -53,23 +54,23 @@ async def load_garmin_db(client, is_main, garmin_cookie):
 
 def init_webdav_source():
     ## 判断RQ数据库是否存在
-    if not os.path.exists(os.path.join(DB_WEBDAV_DIR, db_name)):
+    if not os.path.exists(os.path.join(DB_DIR, db_name)):
         ## 初始化建表
         initGarminDB(db_name)
 
-    if not os.path.exists(FIT_WEBDAV_DIR):
-        os.mkdir(FIT_WEBDAV_DIR)
+    if not os.path.exists(FIT_DIR):
+        os.mkdir(FIT_DIR)
 
 async def upload_activity(main_client, sync_client, activity_id):
     try:
 
         #下载保存路径
-        download_folder = os.path.join(FIT_WEBDAV_DIR, 'FIT-' + main_client.email + "-" + main_client.auth_domain) 
+        download_folder = os.path.join(FIT_DIR, 'FIT-' + main_client.email + "-" + main_client.auth_domain) 
         if not os.path.exists(download_folder):
             os.mkdir(download_folder)
         
 
-        unzip_folder = os.path.join(FIT_WEBDAV_DIR, "FIT-UNZIP-" + main_client.email + "-" + main_client.auth_domain)
+        unzip_folder = os.path.join(FIT_DIR, "FIT-UNZIP-" + main_client.email + "-" + main_client.auth_domain)
          ## 如果下载类型是fit需要新增解压路径
         if not os.path.exists(unzip_folder):
             os.mkdir(unzip_folder)
@@ -82,9 +83,11 @@ async def upload_activity(main_client, sync_client, activity_id):
             file_path = os.path.join(unzip_folder, file_name)
             upload_file_type = os.path.splitext(file_path)[-1]
             await sync_client.upload_activity(file_path, upload_file_type, activity_id)
-        activity_fit_zip_name = JIAN_GOU_YUN_WEBDAV_PATH + '/' + JIAN_GOU_YUN_WEBDAV_FIT_FOLDER + '/' + str(ma.activityId) + '.zip'
-        jianguoyun_client.upload_file(file_path, activity_fit_zip_name)
-        time.sleep(1)
+        ## 选择WEBDAV
+        if LOCAL_OR_WEBDAV:
+            activity_fit_zip_name = JIAN_GOU_YUN_WEBDAV_PATH + '/' + JIAN_GOU_YUN_WEBDAV_FIT_FOLDER + '/' + str(ma.activityId) + '.zip'
+            jianguoyun_client.upload_file(file_path, activity_fit_zip_name)
+            time.sleep(5)
 
     except:
         print(f"Failed to upload_activity {activity_id}: ")
@@ -104,7 +107,7 @@ async def unzip_fit(zip_file_name, unzip_folder, zip_folder):
 
 
 if __name__ == "__main__":
-    
+    start = time.time()
     db_name = "garmin.db"
 
     # 首先读取 面板变量 或者 github action 运行变量
@@ -113,10 +116,16 @@ if __name__ == "__main__":
             v = os.getenv(k)
             SYNC_CONFIG[k] = v
 
+    LOCAL_OR_WEBDAV = SYNC_CONFIG['LOCAL_OR_WEBDAV']
+    # print(LOCAL_OR_WEBDAV)
+    # FIT_DIR = FIT_WEBDAV_DIR if LOCAL_OR_WEBDAV else FIT_FOLDER
+    # DB_DIR = DB_WEBDAV_DIR if LOCAL_OR_WEBDAV else LOCAL_DB_DIR
+    # print(DB_DIR)
     ## 初始化webdav文件
     init_webdav_source()
 
-    jianguoyun_client = JianGuoYunClient()
+    if LOCAL_OR_WEBDAV:
+        jianguoyun_client = JianGuoYunClient()
     
     ## 建立主Garmin 链接
     main_client = GarminConnect(SYNC_CONFIG["SOURCE_GARMIN_EMAIL"],SYNC_CONFIG["SOURCE_GARMIN_PASSWORD"],SYNC_CONFIG["SOURCE_GARMIN_AUTH_DOMAIN"],False)
@@ -151,31 +160,36 @@ if __name__ == "__main__":
     ## 需要上传的主Garmin activityID
     upload_activityID_list = []
 
-    webdav_zip_name_list = []
-    for i in JianGuoYunClient().client.ls( JIAN_GOU_YUN_WEBDAV_PATH + '/' + JIAN_GOU_YUN_WEBDAV_FIT_FOLDER):
-        webdav_zip_name_list.append(i['display_name'])
 
+    ## 如果配置了WEBDAV
+    if LOCAL_OR_WEBDAV:
+        webdav_zip_name_list = []
+        for i in JianGuoYunClient().client.ls( JIAN_GOU_YUN_WEBDAV_PATH + '/' + JIAN_GOU_YUN_WEBDAV_FIT_FOLDER):
+            webdav_zip_name_list.append(i['display_name'])
+
+    sync_activity_key_list = []
+
+    for sa in sync_activity_list:
+        Key = str(sa.activityType) + '-' + str(sa.startTimeLocal)
+        sync_activity_key_list.append(Key)
+    
     # 遍历所有主garmin运动信息
     for ma in main_activity_list:
         # 是否上传标识
         uploadFlag = False
-        ## 遍历所有Sync garmin运动信息
-        for sa in sync_activity_list:
-            ## 如果存在相同运动开始时间于运动类型则说明上传过,跳出循环
-            ## 解决Garmin重复上传数据问题
-            if ma.activityType == sa.activityType and ma.startTimeLocal  == sa.startTimeLocal:
-                uploadFlag = False
+        Key = str(ma.activityType) + '-' + str(ma.startTimeLocal)
+        if Key in sync_activity_key_list:
+            ## 如果配置了WEBDAV
+            if LOCAL_OR_WEBDAV:
                 activity_fit_zip_name = JIAN_GOU_YUN_WEBDAV_PATH + '/' + JIAN_GOU_YUN_WEBDAV_FIT_FOLDER + '/' + str(ma.activityId) + '.zip'
                 if str(ma.activityId) + '.zip' not in webdav_zip_name_list:
                     download_activity_fit_task = asyncio.ensure_future(main_client.download_activity_fit(ma.activityId))
                     loop.run_until_complete(download_activity_fit_task)
                     #运动数据上传至坚果云
                     jianguoyun_client.upload_file_obj(typing.cast(typing.BinaryIO, io.BytesIO(download_activity_fit_task.result())) , activity_fit_zip_name)
-                    time.sleep(1)
-                
-                break;
-            else:
-                uploadFlag = True
+                    time.sleep(5)
+        else:
+            uploadFlag = True
                 
         ## 如果没有该数据则加入upload_activityID_list
         if uploadFlag:
@@ -184,6 +198,11 @@ if __name__ == "__main__":
     for id in upload_activityID_list:
         upload_activity_task = asyncio.ensure_future(upload_activity(main_client, sync_client, id))
         loop.run_until_complete(upload_activity_task)
-
-
-    jianguoyun_client.upload_file_db(os.path.join(DB_WEBDAV_DIR, db_name), JIAN_GOU_YUN_WEBDAV_PATH + '/' + JIAN_GOU_YUN_WEBDAV_DB_DIR + '/' + db_name)
+   
+    ## 如果配置了WEBDAV
+    if LOCAL_OR_WEBDAV:
+        jianguoyun_client.upload_file_db(os.path.join(DB_DIR, db_name), JIAN_GOU_YUN_WEBDAV_PATH + '/' + JIAN_GOU_YUN_WEBDAV_DB_DIR + '/' + db_name)
+    
+    
+    end = time.time()
+    print('同步程序执行时间: ', end - start)

@@ -1,7 +1,7 @@
 import sqlite3
 import traceback
 import os
-from config import DB_WEBDAV_DIR
+from config import DB_DIR
 
 
 class SqliteWebDAVDB(object):
@@ -13,12 +13,12 @@ class SqliteWebDAVDB(object):
         self.connection = None
         self.cursor = None
         
-        if not os.path.exists(DB_WEBDAV_DIR):
-            os.mkdir(DB_WEBDAV_DIR)
+        if not os.path.exists(DB_DIR):
+            os.mkdir(DB_DIR)
 
     def __enter__(self):
         try:
-            self.connection = sqlite3.connect(database=os.path.join(DB_WEBDAV_DIR,self.database), isolation_level=self.isolation_level)
+            self.connection = sqlite3.connect(database=os.path.join(DB_DIR,self.database), isolation_level=self.isolation_level)
             self.cursor = self.connection.cursor()
             return self.cursor
         except Exception as ex:
