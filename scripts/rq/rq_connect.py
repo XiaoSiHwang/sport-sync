@@ -6,7 +6,7 @@ config_path = CURRENT_DIR.rsplit('/', 1)[0]  # 上三级目录
 sys.path.append(config_path)
 
 # from sqlite_db import SqliteDB
-from sqlite_db_webdav import SqliteWebDAVDB as SqliteDB
+from sqlite_db import  SqliteDB
 TIME_OUT = httpx.Timeout(1000.0, connect=1000.0)
 
 class RQConnect:

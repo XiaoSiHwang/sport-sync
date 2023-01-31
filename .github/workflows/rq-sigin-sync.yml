@@ -38,3 +38,8 @@ jobs:
     - name: Run RQ Sigin Sync
       run: |
         python scripts/rq/rq_sgin.py
+    - name: Push new cookie
+      run: |
+        git add .
+        git commit -m 'update rq cookie' || echo "nothing to commit"
+        git push || echo "nothing to push"

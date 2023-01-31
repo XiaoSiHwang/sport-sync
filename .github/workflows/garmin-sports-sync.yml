@@ -54,3 +54,8 @@ jobs:
     - name: Run Garmin Sync
       run: |
         python scripts/garmin/garmin_sync.py
+    - name: Push new cookie
+      run: |
+        git add .
+        git commit -m 'update garmin cookie' || echo "nothing to commit"
+        git push || echo "nothing to push"

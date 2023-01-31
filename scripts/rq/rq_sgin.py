@@ -8,7 +8,7 @@ CURRENT_DIR = os.path.split(os.path.abspath(__file__))[0]  # 当前目录
 config_path = CURRENT_DIR.rsplit('/', 1)[0]  # 上三级目录
 sys.path.append(config_path)
 
-from config import DB_WEBDAV_DIR, JIAN_GOU_YUN_WEBDAV_PATH, JIAN_GOU_YUN_WEBDAV_DB_DIR
+from config import DB_DIR, JIAN_GOU_YUN_WEBDAV_PATH, JIAN_GOU_YUN_WEBDAV_DB_DIR, AESKEY,LOCAL_OR_WEBDAV
 from sqlite_db import  SqliteDB
 from aestools import AESCipher
 from rq_connect import RQConnect
@@ -20,7 +20,6 @@ TIME_OUT = httpx.Timeout(1000.0, connect=1000.0)
 RQ_CONFIG = {
     "RQ_EMAIL": '',
     "RQ_PASSWORD": '',
-    "AESKEY": ''
 }
 
 class RqSgin:
@@ -167,8 +166,9 @@ class AESKEYTooLongExceptin(Exception):
 
 
 if __name__ == "__main__":
-    
-    jianguoyun_client = JianGuoYunClient()
+    jianguoyun_client = None
+    if LOCAL_OR_WEBDAV:
+        jianguoyun_client = JianGuoYunClient()
 
     db_name = 'rq.db'
 
@@ -180,27 +180,27 @@ if __name__ == "__main__":
 
     ## AES─KEY不能超过32位
     try:
-        if(len(RQ_CONFIG['AESKEY']) > 32):
-            raise AESKEYTooLongExceptin(f"AES KEY Too Long", len(AES_KEY))
+        if(len(AESKEY) > 32):
+            raise AESKEYTooLongExceptin(f"AES KEY Too Long", len(AESKEY))
     except AESKEYTooLongExceptin as e_result:
         print(e_result)
 
     ## 判断存储数据文件夹是否存在
-    if not os.path.exists(DB_WEBDAV_DIR):
-        os.mkdir(DB_WEBDAV_DIR)
-    
-    jianguoyun_client.init_db_file(db_name)
+    if not os.path.exists(DB_DIR):
+        os.mkdir(DB_DIR)
+    if LOCAL_OR_WEBDAV:
+        jianguoyun_client.init_db_file(db_name)
 
-    rqdbpath = os.path.join(DB_WEBDAV_DIR, db_name)
+    rqdbpath = os.path.join(DB_DIR, db_name)
 
     ## 判断RQ数据库是否存在
     if not os.path.exists(rqdbpath):
         ## 初始化建表
         initRQDB(rqdbpath)
-
     loop = asyncio.get_event_loop()
     future = asyncio.ensure_future(
-        rq_sigin(RQ_CONFIG['RQ_EMAIL'], RQ_CONFIG['RQ_PASSWORD'], RQ_CONFIG['AESKEY'])
+        rq_sigin(RQ_CONFIG['RQ_EMAIL'], '!@#' + RQ_CONFIG['RQ_PASSWORD'], AESKEY)
     )
     loop.run_until_complete(future)
-    jianguoyun_client.upload_file_db(os.path.join(DB_WEBDAV_DIR, db_name), JIAN_GOU_YUN_WEBDAV_PATH + '/' + JIAN_GOU_YUN_WEBDAV_DB_DIR + '/' + db_name)
+    if LOCAL_OR_WEBDAV:
+        jianguoyun_client.upload_file_db(os.path.join(DB_DIR, db_name), JIAN_GOU_YUN_WEBDAV_PATH + '/' + JIAN_GOU_YUN_WEBDAV_DB_DIR + '/' + db_name)

@@ -13,14 +13,13 @@ CURRENT_DIR = os.path.split(os.path.abspath(__file__))[0]  # 当前目录
 config_path = CURRENT_DIR.rsplit('/', 1)[0]  # 上三级目录
 sys.path.append(config_path)
 
-from config import JIAN_GOU_YUN_WEBDAV_PATH, JIAN_GOU_YUN_WEBDAV_DB_DIR, JIAN_GOU_YUN_WEBDAV_FIT_FOLDER,FIT_DIR, DB_DIR, LOCAL_OR_WEBDAV
+from config import JIAN_GOU_YUN_WEBDAV_PATH, JIAN_GOU_YUN_WEBDAV_DB_DIR, JIAN_GOU_YUN_WEBDAV_FIT_FOLDER,FIT_DIR, DB_DIR, LOCAL_OR_WEBDAV,AESKEY
 from garmin_connect import GarminConnect
 from garmin_db import GarminDB, initGarminDB
 from garmin_cookie import GarminCookie
 from jianguoyun_client import JianGuoYunClient
 
 SYNC_CONFIG = {
-    'AESKEY': '',
     'SOURCE_GARMIN_AUTH_DOMAIN': '',
     'SOURCE_GARMIN_EMAIL': '',
     'SOURCE_GARMIN_PASSWORD': '',
@@ -31,7 +30,7 @@ SYNC_CONFIG = {
 
 
 async def load_garmin_db(client, is_main, garmin_cookie):
-    garmin_db_client = GarminDB(client, db_name, SYNC_CONFIG['AESKEY'], garmin_cookie)
+    garmin_db_client = GarminDB(client, db_name, AESKEY, garmin_cookie)
     serial_cookeie = garmin_db_client.getCookie(is_main)
     if serial_cookeie != None:
         cookeie = pickle.loads(serial_cookeie)
@@ -108,7 +107,6 @@ async def unzip_fit(zip_file_name, unzip_folder, zip_folder):
 if __name__ == "__main__":
     start = time.time()
     db_name = "garmin.db"
-    print(LOCAL_OR_WEBDAV)
 
     # 首先读取 面板变量 或者 github action 运行变量
     for k in SYNC_CONFIG:
@@ -122,7 +120,7 @@ if __name__ == "__main__":
     # print(DB_DIR)
     ## 初始化webdav文件
     init_webdav_source()
-    print(LOCAL_OR_WEBDAV == True)
+    jianguoyun_client = None
     if LOCAL_OR_WEBDAV:
         jianguoyun_client = JianGuoYunClient()
     
@@ -162,8 +160,7 @@ if __name__ == "__main__":
     webdav_zip_name_list = []
     ## 如果配置了WEBDAV
     if LOCAL_OR_WEBDAV:
-        
-        for i in JianGuoYunClient().client.ls( JIAN_GOU_YUN_WEBDAV_PATH + '/' + JIAN_GOU_YUN_WEBDAV_FIT_FOLDER):
+        for i in jianguoyun_client.client.ls( JIAN_GOU_YUN_WEBDAV_PATH + '/' + JIAN_GOU_YUN_WEBDAV_FIT_FOLDER):
             webdav_zip_name_list.append(i['display_name'])
 
     sync_activity_key_list = []
@@ -179,15 +176,16 @@ if __name__ == "__main__":
         Key = str(ma.activityType) + '-' + str(ma.startTimeLocal)
         if Key in sync_activity_key_list:
             ## 如果配置了WEBDAV
-            if LOCAL_OR_WEBDAV:
-                activity_fit_zip_name = JIAN_GOU_YUN_WEBDAV_PATH + '/' + JIAN_GOU_YUN_WEBDAV_FIT_FOLDER + '/' + str(ma.activityId) + '.zip'
-                if str(ma.activityId) + '.zip' not in webdav_zip_name_list:
-                    print("AA")
-                    download_activity_fit_task = asyncio.ensure_future(main_client.download_activity_fit(ma.activityId))
-                    loop.run_until_complete(download_activity_fit_task)
-                    #运动数据上传至坚果云
-                    jianguoyun_client.upload_file_obj(typing.cast(typing.BinaryIO, io.BytesIO(download_activity_fit_task.result())) , activity_fit_zip_name)
-                    time.sleep(5)
+            # if LOCAL_OR_WEBDAV:
+            #     zip_name = str(ma.activityId) + '.zip'
+            #     activity_fit_zip_name = JIAN_GOU_YUN_WEBDAV_PATH + '/' + JIAN_GOU_YUN_WEBDAV_FIT_FOLDER + '/' + zip_name
+            #     if zip_name not in webdav_zip_name_list:
+            #         download_activity_fit_task = asyncio.ensure_future(main_client.download_activity_fit(ma.activityId))
+            #         loop.run_until_complete(download_activity_fit_task)
+            #         #运动数据上传至坚果云
+            #         jianguoyun_client.upload_file_obj(typing.cast(typing.BinaryIO, io.BytesIO(download_activity_fit_task.result())) , activity_fit_zip_name)
+            #         time.sleep(2)
+            pass
         else:
             uploadFlag = True
                 
