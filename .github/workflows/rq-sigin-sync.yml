@@ -5,6 +5,8 @@ on:
   schedule:
     - cron: '30 9,10,16 * * *'
 env:
+  GITHUB_NAME: XiaoSiHwang
+  GITHUB_EMAIL: 1009326507@qq.com
   AESKEY: ${{ secrets.AESKEY }}
   RQ_EMAIL: ${{ secrets.RQ_EMAIL }}
   RQ_PASSWORD: ${{ secrets.RQ_PASSWORD }}
