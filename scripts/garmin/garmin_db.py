@@ -9,7 +9,7 @@ config_path = CURRENT_DIR.rsplit('/', 1)[0]  # 上三级目录
 sys.path.append(config_path)
 
 # from sqlite_db import SqliteDB
-from sqlite_db_webdav import SqliteWebDAVDB as SqliteDB
+from sqlite_db import  SqliteDB
 from aestools import AESCipher
 
 from config import DB_DIR, LOCAL_OR_WEBDAV
@@ -28,7 +28,6 @@ class GarminDB:
         self.garmin_cookie = garmin_cookie
         self.aesChiper = AESCipher(aes_key)
         if LOCAL_OR_WEBDAV:
-            print("AAA")
             self.jianguoyun_client = JianGuoYunClient()
             self.jianguoyun_client.init_db_file(garmin_db_path)
 

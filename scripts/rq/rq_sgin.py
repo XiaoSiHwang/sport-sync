@@ -9,7 +9,7 @@ config_path = CURRENT_DIR.rsplit('/', 1)[0]  # 上三级目录
 sys.path.append(config_path)
 
 from config import DB_WEBDAV_DIR, JIAN_GOU_YUN_WEBDAV_PATH, JIAN_GOU_YUN_WEBDAV_DB_DIR
-from sqlite_db_webdav import SqliteWebDAVDB as SqliteDB
+from sqlite_db import  SqliteDB
 from aestools import AESCipher
 from rq_connect import RQConnect
 import notify

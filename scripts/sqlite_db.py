@@ -4,7 +4,7 @@ import os
 from config import DB_DIR
 
 
-class SqliteWebDAVDB(object):
+class SqliteDB(object):
 
     def __init__(self, database='sqlitedb', isolation_level='', ignore_exc=False):
         self.database = database

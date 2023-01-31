@@ -13,7 +13,7 @@ CURRENT_DIR = os.path.split(os.path.abspath(__file__))[0]  # 当前目录
 config_path = CURRENT_DIR.rsplit('/', 1)[0]  # 上三级目录
 sys.path.append(config_path)
 
-from config import JIAN_GOU_YUN_WEBDAV_PATH, JIAN_GOU_YUN_WEBDAV_DB_DIR, JIAN_GOU_YUN_WEBDAV_FIT_FOLDER,FIT_DIR, DB_DIR
+from config import JIAN_GOU_YUN_WEBDAV_PATH, JIAN_GOU_YUN_WEBDAV_DB_DIR, JIAN_GOU_YUN_WEBDAV_FIT_FOLDER,FIT_DIR, DB_DIR, LOCAL_OR_WEBDAV
 from garmin_connect import GarminConnect
 from garmin_db import GarminDB, initGarminDB
 from garmin_cookie import GarminCookie
@@ -27,7 +27,6 @@ SYNC_CONFIG = {
     'SYNC_GARMIN_AUTH_DOMAIN': '',
     'SYNC_GARMIN_EMAIL': '',
     'SYNC_GARMIN_PASSWORD': '',
-    'LOCAL_OR_WEBDAV' : False
 }
 
 
@@ -109,6 +108,7 @@ async def unzip_fit(zip_file_name, unzip_folder, zip_folder):
 if __name__ == "__main__":
     start = time.time()
     db_name = "garmin.db"
+    print(LOCAL_OR_WEBDAV)
 
     # 首先读取 面板变量 或者 github action 运行变量
     for k in SYNC_CONFIG:
@@ -116,14 +116,13 @@ if __name__ == "__main__":
             v = os.getenv(k)
             SYNC_CONFIG[k] = v
 
-    LOCAL_OR_WEBDAV = SYNC_CONFIG['LOCAL_OR_WEBDAV']
     # print(LOCAL_OR_WEBDAV)
     # FIT_DIR = FIT_WEBDAV_DIR if LOCAL_OR_WEBDAV else FIT_FOLDER
     # DB_DIR = DB_WEBDAV_DIR if LOCAL_OR_WEBDAV else LOCAL_DB_DIR
     # print(DB_DIR)
     ## 初始化webdav文件
     init_webdav_source()
-
+    print(LOCAL_OR_WEBDAV == True)
     if LOCAL_OR_WEBDAV:
         jianguoyun_client = JianGuoYunClient()
     
@@ -160,10 +159,10 @@ if __name__ == "__main__":
     ## 需要上传的主Garmin activityID
     upload_activityID_list = []
 
-
+    webdav_zip_name_list = []
     ## 如果配置了WEBDAV
     if LOCAL_OR_WEBDAV:
-        webdav_zip_name_list = []
+        
         for i in JianGuoYunClient().client.ls( JIAN_GOU_YUN_WEBDAV_PATH + '/' + JIAN_GOU_YUN_WEBDAV_FIT_FOLDER):
             webdav_zip_name_list.append(i['display_name'])
 
@@ -183,6 +182,7 @@ if __name__ == "__main__":
             if LOCAL_OR_WEBDAV:
                 activity_fit_zip_name = JIAN_GOU_YUN_WEBDAV_PATH + '/' + JIAN_GOU_YUN_WEBDAV_FIT_FOLDER + '/' + str(ma.activityId) + '.zip'
                 if str(ma.activityId) + '.zip' not in webdav_zip_name_list:
+                    print("AA")
                     download_activity_fit_task = asyncio.ensure_future(main_client.download_activity_fit(ma.activityId))
                     loop.run_until_complete(download_activity_fit_task)
                     #运动数据上传至坚果云
