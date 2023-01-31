@@ -6,8 +6,8 @@ on:
     branches: [ dev ]
 
 env:
-  # GITHUB_NAME: XiaoSiHwang
-  # GITHUB_EMAIL: 1009326507@qq.com
+  GITHUB_NAME: XiaoSiHwang
+  GITHUB_EMAIL: 1009326507@qq.com
   AESKEY: ${{ secrets.AESKEY }}
   RQ_EMAIL: ${{ secrets.RQ_EMAIL }}
   RQ_PASSWORD: ${{ secrets.RQ_PASSWORD }}
@@ -31,10 +31,16 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python 3.9.15
+    - name: Set up Python 3.8.2
       uses: actions/setup-python@v3
       with:
-        python-version: "3.9.15"
+        python-version: "3.8.2"
+    # from pdm
+    - name: Set Variables
+      id: set_variables
+      run: |
+        echo "::set-output name=PY::$(python -c 'import hashlib, sys;print(hashlib.sha256(sys.version.encode()+sys.executable.encode()).hexdigest())')"
+        echo "::set-output name=PIP_CACHE::$(pip cache dir)"
     - name: Cache PIP
       uses: actions/cache@v2
       with:
@@ -49,9 +55,10 @@ jobs:
       run: |
         python scripts/rq/rq_sgin.py
     - name: Push new cookie
-      # git config --local user.email "${{ env.GITHUB_EMAIL }}"
-      # git config --local user.name "${{ env.GITHUB_NAME }}"
+      
       run: |
+        git config --local user.email "${{ env.GITHUB_EMAIL }}"
+        git config --local user.name "${{ env.GITHUB_NAME }}"
         git add .
         git commit -m 'update rq cookie' || echo "nothing to commit"
         git push || echo "nothing to push"
