@@ -199,7 +199,7 @@ if __name__ == "__main__":
         initRQDB(rqdbpath)
     loop = asyncio.get_event_loop()
     future = asyncio.ensure_future(
-        rq_sigin(RQ_CONFIG['RQ_EMAIL'], '!@#' + RQ_CONFIG['RQ_PASSWORD'], AESKEY)
+        rq_sigin(RQ_CONFIG['RQ_EMAIL'], RQ_CONFIG['RQ_PASSWORD'], AESKEY)
     )
     loop.run_until_complete(future)
     if LOCAL_OR_WEBDAV:
