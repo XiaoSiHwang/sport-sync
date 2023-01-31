@@ -1,4 +1,4 @@
-# Sport Sync 同步程序是过渡DailySync 作者还未推出Web版本而开发，由于Github Action政策本项目很大概率会被Ban，[DailySync](https://github.com/gooin)作者推出新项目大力推荐大家使用原作者项目而非本项目（容易被Ban😁😁）
+# Sport Sync 同步程序是过渡DailySync 作者还未推出Web版本而开发，[DailySync](https://github.com/gooin)作者推出新项目后大力推荐大家使用DailySync作者推出的新项目而非本项目（由于Github Action政策本项目很大概率会被Ban😁😁）
 
 ## Feature
 - Garmin双向同步（国区->国际区）（国际区->国区）（国区->国区）（国际区->国际区）
