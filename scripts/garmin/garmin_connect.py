@@ -119,22 +119,22 @@ class GarminConnect:
                 params=params,
                 data=data,
             )
-        except Exception as err:
-            pass
-        response_url = re.search(r'"(https:[^"]+?ticket=[^"]+)"', response.text)
+            response_url = re.search(r'"(https:[^"]+?ticket=[^"]+)"', response.text)
 
-        if not response_url:
-            pass
+            if not response_url:
+                pass
 
-        response_url = re.sub(r"\\", "", response_url.group(1))
-        try:
+            response_url = re.sub(r"\\", "", response_url.group(1))
             response = self.cf_req.get(response_url)
             self.req.cookies = self.cf_req.cookies
             if response.status_code == 200:
                 self.is_login = True
             response.raise_for_status()
         except Exception as err:
-            pass
+            message =  "登录帐号：%s\n登录区：%s\n失败原因：%s" % (self.email, self.auth_domain, str(err))     
+            print(message) 
+            notify.send("佳明登录失败请检查帐号密码是否正确", message)
+            exit()
     
     async def get_activitys(self, limit, start):
         if not self.is_login:
@@ -182,34 +182,35 @@ class GarminConnect:
             raise err
 
     async def upload_activity(self, file_path, file_type, activity_id):
-        flag = False
-        activity = ACTIVITY_DICT[activity_id]
-        activityName = activity.activityName
-        activityType = activity.activityType
-        startTimeLocal = activity.startTimeLocal
-        calories = activity.calories if activity.calories != None else 0 
-        averageHR = activity.averageHR if activity.averageHR != None else 0 
-        titile = "同步佳明活动\n同步帐号: %s\n同步区域: %s" % (self.email, self.auth_domain)
-        if not self.is_login:
-            self.login()
-        upload_url = f"{self.modern_url}/proxy/upload-service/upload/{file_type}"
-        files = {"data": (f"file{file_type}", open(file_path, 'rb'))}
-        
         try:
+            flag = False
+            activity = ACTIVITY_DICT[activity_id]
+            activityName = activity.activityName
+            activityType = activity.activityType
+            startTimeLocal = activity.startTimeLocal
+            calories = activity.calories if activity.calories != None else 0 
+            averageHR = activity.averageHR if activity.averageHR != None else 0 
+            titile = "同步佳明活动\n同步帐号: %s\n同步区域: %s" % (self.email, self.auth_domain)
+            if not self.is_login:
+                self.login()
+            upload_url = f"{self.modern_url}/proxy/upload-service/upload/{file_type}"
+            files = {"data": (f"file{file_type}", open(file_path, 'rb'))}
             res = await self.req.post(
                 upload_url, files=files, headers={"nk": "NT"}
             )
             result_json = json.loads(res.text)
             if res.status_code == 201:
-                flag = False
+                flag = True
                 message =  "成功上传运动数据\n运动数据ID为：%s\n运动数据名称为：%s\n运动数据类型为：%s\n运动开始时间：%s\n运动平均心率为:%d\n运动卡路里为:%d\n" % (str(activity_id), activityName,activityType,startTimeLocal,averageHR,calories)      
                 notify.send(titile,message)
             elif res.status_code == 409 and result_json.get("detailedImportResult").get("failures")[0].get('messages')[0].get('content'):    
                 message =  "重复上传运动数据\n运动数据ID为：%s\n运动数据名称为：%s\n运动数据类型为：%s\n运动开始时间：%s" % (str(activity_id), activityName,activityType,startTimeLocal)      
                 notify.send(titile,message)
-                flag = True
+                flag = False
         except Exception as e:
-            raise GarminUploadError("upload activity error " + str(e)) from e
+            message =  "上传运动失败：%s\n运动数据ID为：%s\n运动数据名称为：%s\n运动数据类型为：%s\n运动开始时间：%s失败原因：%s" % (str(activity_id), activityName,activityType,startTimeLocal, str(e))    
+            print(message) 
+            notify.send("上传运动失败", message)
         finally:
             return flag
     
