@@ -110,6 +110,7 @@ class GarminConnect:
         }
 
         try:
+            print("执行登录！！！！")
             self.cf_req.get(
                 self.URL_DICT.get("SIGNIN_URL"), headers=self.headers, params=params
             )
