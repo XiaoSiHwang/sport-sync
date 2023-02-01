@@ -65,6 +65,8 @@ jobs:
         restore-keys: |
            ${{ runner.os }}-db-
     - name: Init DB
+      run: | 
+        echo "Init DB"
       if: steps.pip-cache.outputs.cache-hit != 'true'  
     - name: Run Garmin Sync
       run: |
