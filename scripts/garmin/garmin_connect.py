@@ -182,6 +182,7 @@ class GarminConnect:
             raise err
 
     async def upload_activity(self, file_path, file_type, activity_id):
+        flag = False
         activity = ACTIVITY_DICT[activity_id]
         activityName = activity.activityName
         activityType = activity.activityType
@@ -200,13 +201,17 @@ class GarminConnect:
             )
             result_json = json.loads(res.text)
             if res.status_code == 201:
+                flag = False
                 message =  "成功上传运动数据\n运动数据ID为：%s\n运动数据名称为：%s\n运动数据类型为：%s\n运动开始时间：%s\n运动平均心率为:%d\n运动卡路里为:%d\n" % (str(activity_id), activityName,activityType,startTimeLocal,averageHR,calories)      
                 notify.send(titile,message)
             elif res.status_code == 409 and result_json.get("detailedImportResult").get("failures")[0].get('messages')[0].get('content'):    
                 message =  "重复上传运动数据\n运动数据ID为：%s\n运动数据名称为：%s\n运动数据类型为：%s\n运动开始时间：%s" % (str(activity_id), activityName,activityType,startTimeLocal)      
                 notify.send(titile,message)
+                flag = True
         except Exception as e:
-            raise GarminUploadError("upload activity error ") from e
+            raise GarminUploadError("upload activity error " + str(e)) from e
+        finally:
+            return flag
     
     async def test_login(self):
         try:

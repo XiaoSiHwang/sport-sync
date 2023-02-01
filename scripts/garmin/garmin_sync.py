@@ -80,9 +80,9 @@ async def upload_activity(main_client, sync_client, activity_id):
         for file_name in unzip_fit_name_list:
             file_path = os.path.join(unzip_folder, file_name)
             upload_file_type = os.path.splitext(file_path)[-1]
-            await sync_client.upload_activity(file_path, upload_file_type, activity_id)
+            flag = await sync_client.upload_activity(file_path, upload_file_type, activity_id)
         ## 选择WEBDAV
-        if LOCAL_OR_WEBDAV:
+        if LOCAL_OR_WEBDAV and flag:
             activity_fit_zip_name = JIAN_GOU_YUN_WEBDAV_PATH + '/' + JIAN_GOU_YUN_WEBDAV_FIT_FOLDER + '/' + str(ma.activityId) + '.zip'
             jianguoyun_client.upload_file(file_path, activity_fit_zip_name)
             time.sleep(5)
