@@ -61,13 +61,11 @@ jobs:
       uses: actions/cache@v2
       with:
         path: db
-        key: ${{ runner.os }}-db-${{ hashFiles('garmin.db') }}-${{ hashFiles('rq.db') }}
-        restore-keys: |
-           ${{ runner.os }}-db-
+        key: ${{ runner.os }}-db-${{ hashFiles('db/garmin.db') }}-${{ hashFiles('db/rq.db') }}
     - name: Init DB
       run: | 
         echo "Init DB"
-      if: steps.db.outputs.cache-hit != 'true'  
+      if: steps.cache-db.outputs.cache-hit != 'true'  
     - name: Run Garmin Sync
       run: |
         python scripts/garmin/garmin_sync.py
