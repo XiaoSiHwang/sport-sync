@@ -61,7 +61,7 @@ jobs:
       uses: actions/cache@v2
       with:
         path: db
-        key: ${{ runner.os }}-db-${{ hashFiles('db/garmin.db') }}-${{ hashFiles('db/rq.db') }}
+        key: ${{ runner.os }}-db-${{ hashFiles('db') }}
     - name: Init DB
       run: | 
         echo "Init DB"
