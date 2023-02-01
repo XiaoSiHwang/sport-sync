@@ -67,10 +67,18 @@ jobs:
     - name: Init DB
       run: | 
         echo "Init DB"
-      if: steps.pip-cache.outputs.cache-hit != 'true'  
+      if: steps.db.outputs.cache-hit != 'true'  
     - name: Run Garmin Sync
       run: |
         python scripts/garmin/garmin_sync.py
+    - name: Cache DB
+      id: cache-db
+      uses: actions/cache@v2
+      with:
+        path: db
+        key: ${{ runner.os }}-db-${{ hashFiles('garmin.db') }}-${{ hashFiles('rq.db') }}
+        restore-keys: |
+           ${{ runner.os }}-db-
     - name: Push new cookie
       run: |
         git config --local user.email "${{ env.GITHUB_EMAIL }}"
