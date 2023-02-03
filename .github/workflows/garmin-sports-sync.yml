@@ -5,8 +5,8 @@ on:
   schedule:
     - cron: '30 * * * *'
 env:
-  GITHUB_NAME: XiaoSiHwang
-  GITHUB_EMAIL: 1009326507@qq.com
+  GITHUB_NAME: elingsoft
+  GITHUB_EMAIL: wangzb@elingsoft.com
   AESKEY: ${{ secrets.AESKEY }}
   SOURCE_GARMIN_AUTH_DOMAIN: ${{ secrets.SOURCE_GARMIN_AUTH_DOMAIN }}
   SOURCE_GARMIN_EMAIL: ${{ secrets.SOURCE_GARMIN_EMAIL }}
