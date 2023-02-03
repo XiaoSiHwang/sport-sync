@@ -166,14 +166,14 @@ if __name__ == "__main__":
     sync_activity_key_list = []
 
     for sa in sync_activity_list:
-        Key = str(sa.activityType) + '-' + str(sa.startTimeLocal)
+        Key = str(sa.startTimeLocal)
         sync_activity_key_list.append(Key)
     
     # 遍历所有主garmin运动信息
     for ma in main_activity_list:
         # 是否上传标识
         uploadFlag = False
-        Key = str(ma.activityType) + '-' + str(ma.startTimeLocal)
+        Key = str(ma.startTimeLocal)
         if Key in sync_activity_key_list:
             ## 如果配置了WEBDAV
             # if LOCAL_OR_WEBDAV:
