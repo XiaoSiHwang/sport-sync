@@ -3,7 +3,7 @@ name: garmin-sports-sync
 on:
   workflow_dispatch:
   schedule:
-    - cron: '30 7,8,9 * * *'
+    - cron: '30 23,0,1,2,7,8,9 * * *'
 env:
   GITHUB_NAME: elingsoft
   GITHUB_EMAIL: wangzb@elingsoft.com
