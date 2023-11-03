@@ -117,6 +117,8 @@ async def rq_sigin(email, password, AES_KEY):
                         aesChiper.decrypt(encrypt_user_id),
                         aesChiper.decrypt(encrypt_access_token)
                     )
+                    ## 登录一次更新一次时间保证action不掉线
+                    db.execute('''UPDATE user_info SET update_date = datetime('now','localtime') ''')
                 await rqs.sigin()
                 return
             
