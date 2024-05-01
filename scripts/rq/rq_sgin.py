@@ -1,4 +1,4 @@
-import argparse
+import time
 import httpx
 import random
 import asyncio
@@ -8,12 +8,16 @@ CURRENT_DIR = os.path.split(os.path.abspath(__file__))[0]  # 当前目录
 config_path = CURRENT_DIR.rsplit('/', 1)[0]  # 上三级目录
 sys.path.append(config_path)
 
-from config import DB_DIR, JIAN_GOU_YUN_WEBDAV_PATH, JIAN_GOU_YUN_WEBDAV_DB_DIR, AESKEY,LOCAL_OR_WEBDAV
+from config import DB_DIR, AESKEY
 from sqlite_db import  SqliteDB
 from aestools import AESCipher
 from rq_connect import RQConnect
 import notify
-from jianguoyun_client import JianGuoYunClient
+
+import ddddocr
+
+
+ocr = ddddocr.DdddOcr(beta=True, show_ad=False)
 
 TIME_OUT = httpx.Timeout(1000.0, connect=1000.0)
 
@@ -31,6 +35,7 @@ class RqSgin:
             "Origin": "https://rq.runningquotient.cn",
             "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
             "Referer": f"https://rq.runningquotient.cn/Minisite/SignIn/index?userId={userId}&token={token}",
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
         }
         ## RQ用户ID
         self.userId = userId
@@ -46,27 +51,53 @@ class RqSgin:
         PHPSESSID = await self.getSiginPHPSESSID()
         ## 设置请求头Cookie
         self.headers['Cookie'] = f"PHPSESSID={PHPSESSID}"
-        try:
-            ## 执行签到
-            response = await self.req.post(
-                siginUrl,
+        threshold = 10
+        signVerifyCodeStatus = False
+        i = 1
+        ## 10次阈值，超过10次都登录不了不执行等下一轮再执行了
+        while not signVerifyCodeStatus and i <= threshold:
+          try:
+              signVerifyCode = await self.getSignVerifyCode(PHPSESSID)
+              
+              ## 执行签到
+              response = await self.req.post(
+                  siginUrl,
+                  headers=self.headers,
+                  data={'codes': signVerifyCode}
+              )
+              result = response.json()
+              print(result)
+              status = result['status']
+              ## 判断是否签到成功
+              if status == 1:
+                  notify.send("RQ签到任务", "签到成功！！！！")
+                  return
+              ## 判断验证码是否错误
+              elif status == 10011:
+                  pass
+              ## 判断是否已经签到了
+              elif status == 10009:
+                  return
+              i+=1
+              time.sleep(1)
+              
+          except Exception as err:
+              raise err
+
+    async def getSignVerifyCode(self, PHPSESSID):
+        ## 验证码URL
+        signVerifyCodeUrl = f"https://rq.runningquotient.cn/Minisite/SignIn/sign_verify_code"
+        ## PHPSESSID 目前不作存储不清楚RQ原理这块是否会过期故每次请求签到都获取新的PHPSESSID，防止RQ判断用户会脚本执行签到
+        ## 设置请求头Cookie
+        self.headers['Cookie'] = f"PHPSESSID={PHPSESSID}"
+             ## 执行签到
+        response = await self.req.get(
+                signVerifyCodeUrl,
                 headers=self.headers
             )
-            result = response.json()
-            ## 判断是否签到成功
-            if result['status'] == 1:
-                notify.send("RQ签到任务", "签到成功！！！！")
-            else:
-                ## 命令行输出签到信息
-                print(result)
-            
-            '''
-                    feature:
-                        未来会新增各种信息推送如 Email WebHook(企业微信、飞书等等)、Bark 等
-            '''
-
-        except Exception as err:
-            raise err
+        
+        res = ocr.classification(response.content)
+        return res
 
     ## 调用获取请求头Referer里面的Cookie
     async def getSiginPHPSESSID(self):
@@ -168,10 +199,6 @@ class AESKEYTooLongExceptin(Exception):
 
 
 if __name__ == "__main__":
-    jianguoyun_client = None
-    if LOCAL_OR_WEBDAV:
-        jianguoyun_client = JianGuoYunClient()
-
     db_name = 'rq.db'
 
     # 首先读取 面板变量 或者 github action 运行变量
@@ -190,8 +217,7 @@ if __name__ == "__main__":
     ## 判断存储数据文件夹是否存在
     if not os.path.exists(DB_DIR):
         os.mkdir(DB_DIR)
-    if LOCAL_OR_WEBDAV:
-        jianguoyun_client.init_db_file(db_name)
+    
 
     rqdbpath = os.path.join(DB_DIR, db_name)
 
@@ -204,5 +230,4 @@ if __name__ == "__main__":
         rq_sigin(RQ_CONFIG['RQ_EMAIL'], RQ_CONFIG['RQ_PASSWORD'], AESKEY)
     )
     loop.run_until_complete(future)
-    if LOCAL_OR_WEBDAV:
-        jianguoyun_client.upload_file_db(os.path.join(DB_DIR, db_name), JIAN_GOU_YUN_WEBDAV_PATH + '/' + JIAN_GOU_YUN_WEBDAV_DB_DIR + '/' + db_name)
+   
