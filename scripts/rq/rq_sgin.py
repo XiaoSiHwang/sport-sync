@@ -34,7 +34,8 @@ class RqSgin:
             "Host": "rq.runningquotient.cn",
             "Origin": "https://rq.runningquotient.cn",
             "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 14_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
-            "Referer": f"https://rq.runningquotient.cn/Minisite/SignIn/index?userId={userId}&token={token}",
+            # "Referer": f"https://rq.runningquotient.cn/Minisite/SignIn/index?userId={userId}&token={token}",
+            "Referer": "https://rq.runningquotient.cn/Minisite/SignIn/index",
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
         }
         ## RQ用户ID
@@ -51,19 +52,20 @@ class RqSgin:
         PHPSESSID = await self.getSiginPHPSESSID()
         ## 设置请求头Cookie
         self.headers['Cookie'] = f"PHPSESSID={PHPSESSID}"
+        print(PHPSESSID)
         threshold = 10
         signVerifyCodeStatus = False
         i = 1
         ## 10次阈值，超过10次都登录不了不执行等下一轮再执行了
         while not signVerifyCodeStatus and i <= threshold:
           try:
-              signVerifyCode = await self.getSignVerifyCode(PHPSESSID)
+              # signVerifyCode = await self.getSignVerifyCode(PHPSESSID)
               
               ## 执行签到
               response = await self.req.post(
                   siginUrl,
                   headers=self.headers,
-                  data={'codes': signVerifyCode}
+                  # data={'codes': signVerifyCode}
               )
               result = response.json()
               print(result)
@@ -103,7 +105,7 @@ class RqSgin:
     async def getSiginPHPSESSID(self):
         try:
             response = await self.req.get(
-                self.headers.get("Referer")
+                 f"https://rq.runningquotient.cn/Minisite/SignIn/index?userId={self.userId}&token={self.token}",
             )
             return response.cookies['PHPSESSID']
         except Exception as err:

@@ -12,8 +12,8 @@ TIME_OUT = httpx.Timeout(1000.0, connect=1000.0)
 class RQConnect:
     def __init__(self, email, password, rqdbpath) :
         self.headers = {
-            "Host" : "www.runningquotient.cn",
-            "Content-Type": "application/x-www-form-urlencoded",
+            "Host" : "api.rq.run",
+            "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
             "authorization" : "PtCNFNv2FrKVmWuKzALA",
             "accept-encoding" : "br;q=1.0, gzip;q=0.9, deflate;q=0.8",
             "user-agent" : "RQ Run/2.9.4 (cn.runningquotient.RQ-Run; build:12; iOS 14.6.0) Alamofire/2.9.4",
@@ -30,7 +30,7 @@ class RQConnect:
             "password": self.password,
         }
         response = await self.req.post(
-            "https://www.runningquotient.cn/v1/auth/token",
+            "https://api.rq.run/Api/User/submit_login",
             headers=self.headers,
             data=data
         )
