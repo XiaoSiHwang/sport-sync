@@ -52,7 +52,6 @@ class RqSgin:
         PHPSESSID = await self.getSiginPHPSESSID()
         ## 设置请求头Cookie
         self.headers['Cookie'] = f"PHPSESSID={PHPSESSID}"
-        print(PHPSESSID)
         threshold = 10
         signVerifyCodeStatus = False
         i = 1
@@ -151,8 +150,8 @@ async def rq_sigin(email, password, AES_KEY):
                         aesChiper.decrypt(encrypt_access_token)
                     )
                     ## 登录一次更新一次时间保证action不掉线
-                    db.execute('''UPDATE user_info SET update_date = datetime('now','localtime') ''')
                 await rqs.sigin()
+                db.execute('''UPDATE user_info SET update_date = datetime('now','localtime') ''')
                 return
             
         ## 如果数据库中存储的帐号条数大于一条默认全部删除登录后再插入一条保持数据的唯一
