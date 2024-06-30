@@ -80,19 +80,18 @@ class RQConnect:
     async def isExpiredToken(self, aesChiper, encrypt_user_id, encrypt_access_token):
         
         getUserInfoHeader = {
-            "Host" : "www.runningquotient.cn",
+            "Host" : "api.rq.run",
             "authorization" : "PtCNFNv2FrKVmWuKzALA",
             "accept-encoding" : "br;q=1.0, gzip;q=0.9, deflate;q=0.8",
             "user-agent" : "RQ Run/2.9.4 (cn.runningquotient.RQ-Run; build:12; iOS 14.6.0) Alamofire/2.9.4",
             "accept-language" : "zh-Hans-HK;q=1.0, en-HK;q=0.9, en-GB;q=0.8, yue-Hant-HK;q=0.7",
         }
-
-        getUserInfoHeader['x-user-token'] = aesChiper.decrypt(encrypt_access_token)
+        userToken = aesChiper.decrypt(encrypt_access_token)
+        getUserInfoHeader['x-user-token'] = userToken
         decrypt_user_id = aesChiper.decrypt(encrypt_user_id)
-        getUserInfoUrl = f"https://www.runningquotient.cn/v1/user?userId={decrypt_user_id}"
+        getUserInfoUrl = f"https://api.rq.run/Api/Profile/get_profile_info?userId={decrypt_user_id}&token={userToken}"
 
-
-        response = await self.req.get(
+        response = await self.req.post(
             getUserInfoUrl,
             headers=getUserInfoHeader
         )
