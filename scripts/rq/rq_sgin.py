@@ -14,10 +14,10 @@ from aestools import AESCipher
 from rq_connect import RQConnect
 import notify
 
-import ddddocr
+# import ddddocr
 
 
-ocr = ddddocr.DdddOcr(beta=True, show_ad=False)
+# ocr = ddddocr.DdddOcr(beta=True, show_ad=False)
 
 TIME_OUT = httpx.Timeout(1000.0, connect=1000.0)
 
@@ -97,8 +97,8 @@ class RqSgin:
                 headers=self.headers
             )
         
-        res = ocr.classification(response.content)
-        return res
+        # res = ocr.classification(response.content)
+        return None
 
     ## 调用获取请求头Referer里面的Cookie
     async def getSiginPHPSESSID(self):
