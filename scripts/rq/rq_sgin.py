@@ -14,10 +14,10 @@ from aestools import AESCipher
 from rq_connect import RQConnect
 import notify
 
-# import ddddocr
+import ddddocr
 
 
-# ocr = ddddocr.DdddOcr(beta=True, show_ad=False)
+ocr = ddddocr.DdddOcr(beta=True, show_ad=False)
 
 TIME_OUT = httpx.Timeout(1000.0, connect=1000.0)
 
@@ -58,13 +58,13 @@ class RqSgin:
         ## 10次阈值，超过10次都登录不了不执行等下一轮再执行了
         while not signVerifyCodeStatus and i <= threshold:
           try:
-              # signVerifyCode = await self.getSignVerifyCode(PHPSESSID)
+              signVerifyCode = await self.getSignVerifyCode(PHPSESSID)
               
               ## 执行签到
               response = await self.req.post(
                   siginUrl,
                   headers=self.headers,
-                  # data={'codes': signVerifyCode}
+                  data={'codes': signVerifyCode}
               )
               result = response.json()
               print(result)
@@ -97,8 +97,8 @@ class RqSgin:
                 headers=self.headers
             )
         
-        # res = ocr.classification(response.content)
-        return None
+        res = ocr.classification(response.content)
+        return res
 
     ## 调用获取请求头Referer里面的Cookie
     async def getSiginPHPSESSID(self):
